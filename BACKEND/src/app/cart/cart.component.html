@@ -1,0 +1,7 @@
+<p>cart works!</p>
+<div *ngFor="let p of cart$ | async">
+  {{p.id}}
+  {{p.name}}
+  {{p.price}}
+  <button (click)="deleteFromCart(p)">Delete from cart</button>
+</div>

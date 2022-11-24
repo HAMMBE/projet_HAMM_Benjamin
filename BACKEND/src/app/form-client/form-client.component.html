@@ -1,0 +1,24 @@
+<p>form-client works!</p>
+
+<form [formGroup]="formClient" (ngSubmit)="click()">
+  <label>Name : </label>
+  <input type="text" formControlName="firstname" name="firstname">
+  <br/>
+  <label>lastname : </label>
+  <input type="text" formControlName="lastname" name="lastname">
+  <br/>
+  <label>email : </label>
+  <input type="text" formControlName="email" name="email">
+  <br/>
+  <label>password : </label>
+  <input type="password" formControlName="password" name="password">
+  <br/>
+  <label>login : </label>
+  <input type="text" formControlName="login" name="login">
+  <br/>
+  <label>phone : </label>
+  <input type="text" formControlName="phone" name="phone">
+  <br/>
+  <button type="submit" [disabled]="!formClient.valid">Submit</button>
+  <br/>
+</form>

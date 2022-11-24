@@ -1,0 +1,12 @@
+<p>show-catalogue works!</p>
+<label for="filter">Filter : </label>
+<input id="filter" [(ngModel)]="filter" (keyup)="getFilteredProducts()">
+<div *ngFor="let  p of productList$ | async">
+    <a [routerLink]="[p.id]">
+    {{p.name}}
+    {{p.price}}
+    {{p.id}}
+    </a>
+ <button (click)="addToCart(p)">Add to cart</button>
+</div>
+
