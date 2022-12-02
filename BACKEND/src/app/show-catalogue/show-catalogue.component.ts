@@ -5,6 +5,11 @@ import {Observable, of} from "rxjs";
 import { map } from 'rxjs/internal/operators/map';
 import {Store} from "@ngxs/store";
 import {AddProduct} from "../../shared/actions/cart-action";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  Subject
+} from "rxjs";
 
 @Component({
   selector: 'app-show-catalogue',
@@ -12,6 +17,14 @@ import {AddProduct} from "../../shared/actions/cart-action";
   styleUrls: ['./show-catalogue.component.css']
 })
 export class ShowCatalogueComponent implements OnInit {
+  public products$!: Observable<Product[]>;
+  public models$!: Observable<string[]>;
+
+  public nameFilterChanged$ = new Subject<string>();
+  public modelsFilterChanged$ = new Subject<string[]>();
+
+  public modelsFilter: string[] = [];
+  public nameFilter: string = "";
 
   constructor(private productService : ProductService, private store : Store) { }
 
@@ -20,19 +33,27 @@ export class ShowCatalogueComponent implements OnInit {
 
   filter : string = "";
   ngOnInit(): void {
+    const debounceTimeMs = 300;
+    this.nameFilterChanged$
+      .pipe(debounceTime(debounceTimeMs), distinctUntilChanged())
+      .subscribe(() => {
+        this.getFilteredProducts();
+      });
     this.productList$ = this.productService.getProducts();
+    this.products$ = this.productService.getProducts();
   }
-
+  public filterProduct = (product: Product) => {
+    return (
+      product.name.toLowerCase().includes(this.nameFilter.toLowerCase())
+    );
+  };
 
   getFilteredProducts() : void {
-    if (this.filter == "") {
-      this.productList$ = this.productService.getProducts();
-    }
-    else {
-      this.productList$ = this.productService.getProducts().pipe(
-        map((products: Product[]) => products.filter((product: Product) => product.name.includes(this.filter)))
-      );
-    }
+    this.products$ = this.productService.getProducts().pipe(
+      map(products => {
+        return products.filter(this.filterProduct);
+      })
+    );
   }
 
   addToCart(product: Product) : void {
