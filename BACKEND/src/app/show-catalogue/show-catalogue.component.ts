@@ -18,18 +18,12 @@ import {
 })
 export class ShowCatalogueComponent implements OnInit {
   public products$!: Observable<Product[]>;
-  public models$!: Observable<string[]>;
 
   public nameFilterChanged$ = new Subject<string>();
-  public modelsFilterChanged$ = new Subject<string[]>();
 
-  public modelsFilter: string[] = [];
   public nameFilter: string = "";
 
   constructor(private productService : ProductService, private store : Store) { }
-
-  productList$: Observable<Product[]> | undefined;
-
 
   filter : string = "";
   ngOnInit(): void {
@@ -39,7 +33,6 @@ export class ShowCatalogueComponent implements OnInit {
       .subscribe(() => {
         this.getFilteredProducts();
       });
-    this.productList$ = this.productService.getProducts();
     this.products$ = this.productService.getProducts();
   }
   public filterProduct = (product: Product) => {
