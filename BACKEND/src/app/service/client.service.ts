@@ -31,7 +31,7 @@ export class ClientService {
 
   public postlogin(login: string, password: string) : Observable<any> {
     console.log(login + " " + password);
-    return this.httpClient.post("https://tp-hamm-benjamin.onrender.com/api/login", {login: login, pass: password});
+    return this.httpClient.post("https://tp-hamm-benjamin.onrender.com/api/login", {login: login, password: password});
   }
 
 }

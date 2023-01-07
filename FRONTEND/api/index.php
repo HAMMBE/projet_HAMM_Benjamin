@@ -15,7 +15,10 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use Tuupola\Middleware\HttpBasicAuthentication;
 use \Firebase\JWT\JWT;
+include_once './models/Client.php';
+include_once './models/Product.php';
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../bootstrap.php';
  
 const JWT_SECRET = "makey1234567";
 
@@ -47,11 +50,12 @@ $app->get('/api/hello/{name}', function (Request $request, Response $response, $
 });
 
 $app->post('/api/login', function (Request $request, Response $response, $args) {
-    $err=false;
+	global $entityManager;    
+	$err=false;
     $inputJSON = file_get_contents('php://input');
     $body = json_decode( $inputJSON, TRUE ); //convert JSON into array 
     $login = $body['login'] ?? ""; 
-    $pass = $body['pass'] ?? "";
+    $pass = $body['password'] ?? "";
 
     if (!preg_match("/[a-zA-Z0-9]{1,20}/",$login))   {
         $err = true;
@@ -61,9 +65,16 @@ $app->post('/api/login', function (Request $request, Response $response, $args) 
     }
 
     if (!$err) {
-        $response = createJwT($response);
-        $data = array('nom' => 'toto', 'prenom' => 'titi');
-        $response->getBody()->write(json_encode($data));
+        $utilisateurRepository = $entityManager->getRepository('Client');
+        $utilisateur = $utilisateurRepository->findOneBy(array('login' => $login, 'password' => $pass));
+        if ($utilisateur) {
+            $response = createJwT($response);
+            $data = array('firstname' => trim($utilisateur->getFirstname()), 'lastname' => trim($utilisateur->getLastname()), 'email' => trim($utilisateur->getEmail()), 'login' => trim($utilisateur->getLogin()),'phone' => trim($utilisateur->getPhone()));
+            $response->getBody()->write(json_encode($data));
+        } else {          
+            $response = $response->withStatus(404);
+        }
+
     } else {
         $response = $response->withStatus(401);
     }
@@ -71,37 +82,54 @@ $app->post('/api/login', function (Request $request, Response $response, $args) 
 });
 
 $app->post('/api/register', function (Request $request, Response $response, $args) {
+    global $entityManager;
+    
     $err=false;
     $inputJSON = file_get_contents('php://input');
-    $response->getBody()->write($inputJSON);
-    return $response;
+    $body = json_decode( $inputJSON, TRUE ); //convert JSON into array 
+    $body = $body['client'];
+    $firstname = $body['firstname'] ?? ""; 
+    $lastname = $body['lastname'] ?? "";
+    $email = $body['email'] ?? "";
+    $password = $body['password'] ?? "";
+    $login = $body['login'] ?? "";
+    $phone = $body['phone'] ?? "";
+
+    $client = new Client();
+    $client->setFirstname($firstname);
+    $client->setLastname($lastname);
+    $client->setEmail($email);
+    $client->setPassword($password);
+    $client->setLogin($login);
+    $client->setPhone($phone);
+
+    $entityManager->persist($client);
+    $entityManager->flush();
+    
+    return $response->withStatus(201);
 });
 
-$array = [
-    [
-        "id" => 1,
-        "name" => "Product 1",
-        "price" => "100"
-    ],
-    [
-        "id" => 2,
-        "name" => "Product 2",
-        "price" => "200"
-    ]
-];
-
 $app->get('/api/catalogue', function (Request $request, Response $response, $args) {
-    global $array;
-    $response->getBody()->write(json_encode ($array));
+    global $entityManager;
+    $produitRepository = $entityManager->getRepository('Product');
+    $produits = $produitRepository->findAll();
+    $data = array();
+    foreach ($produits as $produit) {
+        $data[] = array('id' => trim($produit->getId()), 'name' => trim($produit->getName()), 'price' => trim($produit->getPrice()));
+    }
+    $response->getBody()->write(json_encode($data));
     return $response;
 });
 
 $app->get('/api/catalogue/{id}', function (Request $request, Response $response, $args) {
-    global $array;
+    global $entityManager;
     $id = $args['id'];
-    if($id > 0 && $id <= count($array)) {
-        $response->getBody()->write(json_encode ($array[$id-1]));
-    } else {
+    $produitRepository = $entityManager->getRepository('Product');
+    $produit = $produitRepository->findOneBy(array('id' => $id));
+    if ($produit) {
+        $data = array('id' => trim($produit->getId()), 'name' => trim($produit->getName()), 'price' => trim($produit->getPrice()));
+        $response->getBody()->write(json_encode($data));
+    } else {          
         $response = $response->withStatus(404);
     }
     return $response;

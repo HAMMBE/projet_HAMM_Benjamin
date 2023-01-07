@@ -1,12 +1,25 @@
-<p>login works!</p>
-<form [formGroup]="loginForm" (ngSubmit)="submit()">
-  <label>login : </label>
-  <input type="text" formControlName="login" name="login">
+<div *ngIf="!(client$ |async)">
+  <form [formGroup]="loginForm" (ngSubmit)="submit()">
+    <label>login : </label>
+    <input type="text" formControlName="login" name="login">
+    <br/>
+    <label>password : </label>
+    <input type="text" formControlName="password" name="password">
+    <br/>
+    <br/>
+    <button type="submit">Submit</button>
+    <br/>
+  </form>
+</div>
+<div *ngIf="client$ | async as client">Login : {{client.login}}
   <br/>
-  <label>password : </label>
-  <input type="text" formControlName="password" name="password">
+  Email : {{client.email}}
   <br/>
+  Firstname : {{client.firstname}}
   <br/>
-  <button type="submit">Submit</button>
+  Lastname : {{client.lastname}}
   <br/>
-</form>
+  Phone : {{client.phone}}
+  <br/>
+
+</div>
